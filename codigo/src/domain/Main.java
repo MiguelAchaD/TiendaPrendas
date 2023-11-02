@@ -27,6 +27,9 @@ public class Main {
 		DBmanager dbm = new DBmanager();
 		dbm.initConexion();
 		
+		//INICIALIZACION DE VARIABLES DEL PROGRAMA QUE ESTAN EN LA BD
+		List<Proveedor> proveedores = dbm.getProveedores();
+		List<Tipo> tipos = dbm.getTipos();
 
 		//DECLARACION DE VENTANAS
 		JFrameCarga carga;
@@ -39,12 +42,12 @@ public class Main {
 		
 		//INICIAR BUSQUEDA
 		principal = new JFramePrincipal();
-		for (Tienda.Proveedor elemento : Tienda.Proveedor.values()) {
-			principal.getOpcionProveedor().addItem(elemento.toString().replace("_", " "));
+		for (Proveedor elemento : proveedores) {
+			principal.getOpcionProveedor().addItem(elemento.getNombre().replace("_", " "));
 		}
 		
-		for (Prenda.Tipo elemento : Prenda.Tipo.values()) {
-			principal.getOpcionTipo().addItem(elemento.toString().toLowerCase());
+		for (Tipo elemento : tipos) {
+			principal.getOpcionTipo().addItem(elemento.getNombre().toLowerCase());
 		}
 		
 		//INICIAR PRENDAS
@@ -135,11 +138,13 @@ public class Main {
 		tablaPrendas.getColumnModel().getColumn(3).setPreferredWidth(50);
 		tablaPrendas.getColumnModel().getColumn(4).setPreferredWidth(50);
 		tablaPrendas.getColumnModel().getColumn(5).setPreferredWidth(50);
+		tablaPrendas.getColumnModel().getColumn(5).setPreferredWidth(50);
 		tablaPrendas.setRowHeight(400);
+		
 		
 		List<Prenda> prendas = dbm.getPrendas();
 		for (Prenda prenda : prendas) {
-			modeloTabla.addRow(new Object[] {prenda.getImagen(), prenda.getNombre(), prenda.getProveedor(), prenda.getTipo(), prenda.getTamanyo(), prenda.getPrecio(), new JButton("Añadir al carrito")});
+			modeloTabla.addRow(new Object[] {prenda.getImagen(), prenda.getNombre(), prenda.getProveedor().getNombre(), prenda.getTipo().getNombre() , prenda.getTamanyo().getNombre(), prenda.getPrecio(), new JButton("Añadir al carrito")});
 		}
 		
 		

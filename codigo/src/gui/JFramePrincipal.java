@@ -27,11 +27,6 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 
-import domain.DBmanager;
-import domain.Prenda.Tipo;
-import domain.Tienda;
-import domain.Tienda.Proveedor;
-
 public class JFramePrincipal extends JFrame{
 	private static final long serialVersionUID = 1L;
 	

@@ -21,16 +21,116 @@ public class DBmanager {
 	}
 	
 	//METODOS DE LA BASE DE DATOS
+	public List<Proveedor> getProveedores(){
+		String sql = "Select * from Proveedor;";
+		List<Proveedor> proveedores = new ArrayList<>();
+		try (Statement stmt = conn.createStatement()){
+			try (ResultSet rs = stmt.executeQuery(sql)){
+				while (rs.next()) {
+					Proveedor proveedor = new Proveedor(
+							rs.getString("nombre")
+					);
+					proveedores.add(proveedor);
+				}
+			} catch (Exception e) {
+				System.err.println(e.getMessage());
+			}
+			
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+		}
+		return proveedores;
+	}
+	
+	public Proveedor matchProveedor(List<Proveedor> proveedores, String nombreProveedor) {
+		Proveedor match;
+		for (Proveedor proveedor : proveedores) {
+			if (proveedor.getNombre().equals(nombreProveedor)) {
+				match = proveedor;
+				return match;
+			}
+		}
+		return null;
+	}
+	
+	public List<Tipo> getTipos(){
+		String sql = "Select * from Tipo;";
+		List<Tipo> tipos = new ArrayList<>();
+		try (Statement stmt = conn.createStatement()){
+			try (ResultSet rs = stmt.executeQuery(sql)){
+				while (rs.next()) {
+					Tipo tipo = new Tipo(
+							rs.getString("nombre")
+					);
+					tipos.add(tipo);
+				}
+			} catch (Exception e) {
+				System.err.println(e.getMessage());
+			}
+			
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+		}
+		return tipos;
+	}
+	
+	public Tipo matchTipo(List<Tipo> tipos, String nombreTipo) {
+		Tipo match;
+		for (Tipo tipo : tipos) {
+			if (tipo.getNombre().equals(nombreTipo)) {
+				match = tipo;
+				return match;
+			}
+		}
+		return null;
+	}
+	
+	public List<Tamanyo> getTamanyos(){
+		String sql = "Select * from Tamanyo;";
+		List<Tamanyo> tamanyos = new ArrayList<>();
+		try (Statement stmt = conn.createStatement()){
+			try (ResultSet rs = stmt.executeQuery(sql)){
+				while (rs.next()) {
+					Tamanyo tamanyo = new Tamanyo(
+							rs.getString("nombre")
+					);
+					tamanyos.add(tamanyo);
+				}
+			} catch (Exception e) {
+				System.err.println(e.getMessage());
+			}
+			
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+		}
+		return tamanyos;
+	}
+	
+	public Tamanyo matchTamanyo(List<Tamanyo> tamanyos, String nombreTamanyo) {
+		Tamanyo match;
+		for (Tamanyo tamanyo : tamanyos) {
+			if (tamanyo.getNombre().equals(nombreTamanyo)) {
+				match = tamanyo;
+				return match;
+			}
+		}
+		return null;
+	}
+	
+	
 	public List<Prenda> getPrendas(){
 		String sql = "Select * from Prenda;";
 		List<Prenda> prendas = new ArrayList<>();
+		List<Tipo> tipos = getTipos();
+		List<Tamanyo> tamanyos = getTamanyos();
+		List<Proveedor> proveedores = getProveedores();
 		try(Statement stmt = conn.createStatement()){
 			try (ResultSet rs = stmt.executeQuery(sql)){
 				while (rs.next()) {
 					Prenda prenda = new Prenda(
-							Prenda.Tamanyo.valueOf(rs.getString("tamanyo")),
-							Prenda.Tipo.valueOf(rs.getString("tipo")),
-							Tienda.Proveedor.valueOf(rs.getString("proveedor")),
+							matchTamanyo(tamanyos, rs.getString("tamanyo")),
+							matchTipo(tipos, rs.getString("tipo")),
+							matchProveedor(proveedores, rs.getString("proveedor")),
 							rs.getString("nombre"),
 							rs.getString("imagen"),
 							rs.getInt("precio")
@@ -50,10 +150,11 @@ public class DBmanager {
 	public List<Tienda> getTiendas(){
 		String sql = "Select * from Tienda;";
 		List<Tienda> tiendas = new ArrayList<>();
+		List<Proveedor> proveedores = getProveedores();
 		try (Statement stmt = conn.createStatement()){
 			try (ResultSet rs = stmt.executeQuery(sql)){
 				Tienda tienda = new Tienda(
-						Tienda.Proveedor.valueOf(rs.getString("proveedor")),
+						matchProveedor(proveedores, rs.getString("proveedor")),
 						rs.getString("URI"),
 						rs.getString("telefono"),
 						rs.getString("direccion")

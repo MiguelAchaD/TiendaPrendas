@@ -1,17 +1,6 @@
 package domain;
 
-import domain.Tienda.Proveedor;
-
 public class Prenda {
-	//ENUMS
-	public enum Tamanyo{
-		S, P, M, L, XL;
-	}
-	
-	public enum Tipo{
-		CABEZA, SUPERIOR, INFERIOR, CALZADO;
-	}
-	
 	//VARIABLES
 	private Tamanyo tamanyo;
 	private Tipo tipo;
@@ -35,33 +24,35 @@ public class Prenda {
 	public Tamanyo getTamanyo() {
 		return tamanyo;
 	}
+
 	public void setTamanyo(Tamanyo tamanyo) {
 		this.tamanyo = tamanyo;
 	}
+
 	public Tipo getTipo() {
 		return tipo;
 	}
+
 	public void setTipo(Tipo tipo) {
 		this.tipo = tipo;
 	}
+
 	public Proveedor getProveedor() {
 		return proveedor;
 	}
+
 	public void setProveedor(Proveedor proveedor) {
 		this.proveedor = proveedor;
 	}
+
 	public String getNombre() {
 		return nombre;
 	}
+
 	public void setNombre(String nombre) {
 		this.nombre = nombre;
 	}
-	public Integer getPrecio() {
-		return precio;
-	}
-	public void setPrecio(Integer precio) {
-		this.precio = precio;
-	}
+
 	public String getImagen() {
 		return imagen;
 	}
@@ -70,10 +61,19 @@ public class Prenda {
 		this.imagen = imagen;
 	}
 
+	public Integer getPrecio() {
+		return precio;
+	}
+
+	public void setPrecio(Integer precio) {
+		this.precio = precio;
+	}
+
 	//TO STRING
 	@Override
 	public String toString() {
-		return "Prenda [tamanyo=" + tamanyo + ", tipo=" + tipo + ", proveedor=" + proveedor + ", nombre=" + nombre
-				+ ", precio=" + precio + "]";
+		return "Prenda [tamanyo=" + tamanyo.getNombre() + ", tipo=" + tipo.getNombre() + ", proveedor=" + proveedor.getNombre() + ", nombre=" + nombre
+				+ ", imagen=" + imagen + ", precio=" + precio + "]";
 	}
+
 }

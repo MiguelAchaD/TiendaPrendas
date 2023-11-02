@@ -1,10 +1,6 @@
 package domain;
 
 public class Tienda {
-	//ENUMS
-	public enum Proveedor{
-	    Zara, H_y_M, Gap, Adidas, Nike, Gucci, Calvin_Klein, The_North_Face, Hollister, Puma;
-	}
 	
 	//VARIABLES
 	private Proveedor proveedor;
@@ -57,7 +53,7 @@ public class Tienda {
 	//TO STRING
 	@Override
 	public String toString() {
-		return "Tienda [proveedor=" + proveedor + ", URI=" + URI + ", telefono=" + telefono + ", direccion=" + direccion
+		return "Tienda [proveedor=" + proveedor.getNombre() + ", URI=" + URI + ", telefono=" + telefono + ", direccion=" + direccion
 				+ "]";
 	}
 	
