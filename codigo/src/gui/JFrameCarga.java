@@ -1,9 +1,13 @@
 package gui;
 
 import javax.swing.*;
+
+import domain.DBmanager;
+
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.sql.SQLException;
 
 public class JFrameCarga extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -11,7 +15,7 @@ public class JFrameCarga extends JFrame {
 	// VARIABLES
 	JLabel imagen;
 
-	public JFrameCarga() {
+	public JFrameCarga(DBmanager dbm) {
 		// CONFIGURACION DE VENTANA
 		imagen = new JLabel();
 		ImageIcon imagenOriginal = new ImageIcon("images/icono.png");
@@ -35,30 +39,33 @@ public class JFrameCarga extends JFrame {
 		this.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowOpened(WindowEvent e) {
-				Timer timer = new Timer(1500, actionEvent -> cerrarVentana());
-				timer.setRepeats(false);
-				timer.start();
+				//Carga de datos
+				try {
+					// TODO: Cargar datos
+					Thread.sleep(1000);
+					dispose();
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				SwingUtilities.invokeLater(() -> new JFrameLogIn(dbm).setVisible(true));
+			}
+			
+			@Override
+			public void windowClosing(WindowEvent e) {
+				if (e.getWindow() instanceof JFrameCarga) {
+					try {
+						dbm.cerrarConexion();
+						System.out.println("Conexión a bd cerrada");
+						System.exit(1);
+					} catch (SQLException e1) {
+						System.out.println(e1.getMessage());
+					}
+				}
 			}
 		});
 
 		this.setVisible(true);
 	}
 
-	private void cerrarVentana() {
-		this.dispose();
-	}
-
-	public static void main(String[] args) {
-		SwingUtilities.invokeLater(() -> {
-			JFrameCarga carga = new JFrameCarga();
-			carga.addWindowListener(new WindowAdapter() {
-				@Override
-				public void windowClosing(WindowEvent e) {
-					// Colocar aquí el código que se ejecutará al cerrar la ventana manualmente
-					System.out.println("La ventana se cerró manualmente.");
-					System.exit(0);
-				}
-			});
-		});
-	}
 }
