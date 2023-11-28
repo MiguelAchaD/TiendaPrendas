@@ -1,5 +1,7 @@
 package gui;
 
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -12,6 +14,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,7 +28,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
-import javax.swing.text.Document;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import domain.DBmanager;
 
@@ -78,42 +83,44 @@ public class JFrameLogIn extends JFrame {
 		passwordField = new JPasswordField(20);
 		iniciarSesionButton = new JButton("Iniciar Sesión");
 		registroButton = new JButton("Registrarse");
-		registroLabel = new JLabel("<html><u style='color: blue'>¿No tienes una cuenta? Regístrate gratis!</u></html>");
-		inicioSesionLabel = new JLabel("<html><u style='color: blue'>¿Ya tienes una cuenta? Inicia sesión!</u></html>");
+		registroLabel = new JLabel("<html><u>¿No tienes una cuenta? Regístrate gratis</u></html>");
+		registroLabel.setForeground(new Color(0, 0, 255));
+		inicioSesionLabel = new JLabel("<html><u>¿Ya tienes una cuenta? Inicia sesión</u></html>");
+		inicioSesionLabel.setForeground(new Color(0, 0, 255));
 
 		// DECLARACION DE LOS ESTADOS Y SUS VALORES
-		HashMap<Boolean, List<HashMap<JComponent, String>>> estado = new HashMap<>();
+		HashMap<Boolean, List<JComponent>> estado = new HashMap<>();
 		// DECLARACION DE LOS COMPONENTES
-		HashMap<JComponent, String> label = new HashMap<>();
-		List<HashMap<JComponent, String>> inicioDeSesionJComponents = new ArrayList<>();
-		label.put(usuarioTextField, "Usuario:");
-		inicioDeSesionJComponents.add(label);
-		label.put(passwordField, "Contraseña:");
-		inicioDeSesionJComponents.add(label);
-		label.put(usuarioTextField, null);
-		inicioDeSesionJComponents.add(label);
-		label.put(registroLabel, null);
-		inicioDeSesionJComponents.add(label);
-		List<HashMap<JComponent, String>> registroJComponents = new ArrayList<>();
-		label.put(nombreTextField, "Nombre:");
-		registroJComponents.add(label);
-		label.put(apellidosTextField, "Apellidos:");
-		registroJComponents.add(label);
-		label.put(mailTextField, "Email:");
-		registroJComponents.add(label);
-		label.put(passwordField, "Contraseña:");
-		registroJComponents.add(label);
-		label.put(registroButton, null);
-		registroJComponents.add(label);
-		label.put(inicioSesionLabel, null);
-		registroJComponents.add(label);
+		List<JComponent> inicioDeSesionJComponents = new ArrayList<>();
+		inicioDeSesionJComponents.add(usuarioTextField);
+		inicioDeSesionJComponents.add(passwordField);
+		inicioDeSesionJComponents.add(iniciarSesionButton);
+		inicioDeSesionJComponents.add(registroLabel);
+		List<JComponent> registroJComponents = new ArrayList<>();
+		registroJComponents.add(mailTextField);
+		registroJComponents.add(nombreTextField);
+		registroJComponents.add(apellidosTextField);
+		registroJComponents.add(usuarioTextField);
+		registroJComponents.add(passwordField);
+		registroJComponents.add(registroButton);
+		registroJComponents.add(inicioSesionLabel);
 
 		estado.put(true, inicioDeSesionJComponents);
 		estado.put(false, registroJComponents);
 
+		HashMap<JComponent, String> compLabel = new HashMap<>();
+		compLabel.put(nombreTextField, "Nombre");
+		compLabel.put(apellidosTextField, "Apellidos");
+		compLabel.put(mailTextField, "Email");
+		compLabel.put(usuarioTextField, "Usuario");
+		compLabel.put(passwordField, "Contraseña");
+
 		setLayout(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.insets = new Insets(20, 5, 20, 5);
+
+		addLinkListener(inicioSesionLabel, gbc, estado, compLabel);
+		addLinkListener(registroLabel, gbc, estado, compLabel);
 
 		// LOGO
 		gbc.gridx = 0;
@@ -121,22 +128,7 @@ public class JFrameLogIn extends JFrame {
 		gbc.gridwidth = 2;
 		add(logo, gbc);
 
-		initFrame(gbc, estado, getFrame());
-
-		// CAMBIAR A REGISTRO
-		registroLabel.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				initFrame(gbc, estado, getFrame());
-			}
-		});
-
-		inicioSesionLabel.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				initFrame(gbc, estado, getFrame());
-			}
-		});
+		initFrame(gbc, estado, getFrame(), compLabel);
 
 		// INICIAR SESION
 		iniciarSesionButton.addActionListener(new ActionListener() {
@@ -149,9 +141,6 @@ public class JFrameLogIn extends JFrame {
 			}
 		});
 
-//		this.dispose();
-//		SwingUtilities.invokeLater(() -> new JFramePrincipal(dbm).setVisible(true));
-
 		// CONFIGURACION GENERAL
 		Dimension tamanyoPantalla = Toolkit.getDefaultToolkit().getScreenSize();
 		int tamanyo = (tamanyoPantalla.height / 2);
@@ -161,25 +150,88 @@ public class JFrameLogIn extends JFrame {
 		this.setVisible(true);
 		this.setTitle("Ventana Principal");
 		this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		setResizable(false);
 	}
 
-	private static void initFrame(GridBagConstraints gbc, HashMap<Boolean, List<HashMap<JComponent, String>>> estado,
-			JFrame frame) {
-		List<HashMap<JComponent, String>> componentes = estado.get(estadoLogin);
-		HashMap<JComponent, String> componente;
-		for (int i = 0; i < componentes.size(); i++) {
-			componente = componentes.get(i);
-			System.out.println(componente.values());
-			gbc.gridy = i;
-//			System.out.println(componente.values().toArray()[0].equals(null));
-			if (componente.values().toArray()[0] != null) {
-				gbc.gridx = 1;
-				frame.add(new JLabel(componente.values().toArray()[0].toString()));
-			}
-			gbc.gridx = 0;
-			frame.add((JComponent) componente.keySet().toArray()[0]);
+	public void removeComponents(JFrame frame) {
+		Component[] components = frame.getContentPane().getComponents();
+		for (int i = 1; i < components.length; i++) {
+			frame.getContentPane().remove(components[i]);
 		}
+	}
+
+	private void initFrame(GridBagConstraints gbc, HashMap<Boolean, List<JComponent>> estado, JFrame frame,
+			HashMap<JComponent, String> compLabel) {
+
+		if (frame.getContentPane().getComponents().length > 1) {
+			removeComponents(frame);
+		}
+
+		List<JComponent> componentes = estado.get(!estadoLogin);
+
+		for (int i = 0; i < componentes.size(); i++) {
+			JComponent comp = componentes.get(i);
+			gbc.gridy = i + 1;
+			if (compLabel.keySet().contains(comp)) {
+				gbc.gridwidth = 1;
+				frame.getContentPane().add(new JLabel(compLabel.get(comp)), gbc);
+				gbc.gridx = 1;
+			}
+			frame.getContentPane().add(comp, gbc);
+			gbc.gridx = 0;
+			gbc.gridwidth = 2;
+			frame.revalidate();
+			frame.repaint();
+		}
+
 		estadoLogin = !estadoLogin;
 	}
 
+	private void addLinkListener(JComponent comp, GridBagConstraints gbc, HashMap<Boolean, List<JComponent>> estado,
+			HashMap<JComponent, String> compLabel) {
+		comp.addMouseListener(new MouseAdapter() {
+			public void mouseEntered(MouseEvent evt) {
+				comp.setForeground(new Color(0, 128, 255));
+			}
+
+			public void mouseExited(MouseEvent evt) {
+				comp.setForeground(new Color(0, 0, 255));
+			}
+
+			public void mouseClicked(MouseEvent e) {
+				initFrame(gbc, estado, getFrame(), compLabel);
+			}
+		});
+
+	}
+
+	private void addActionAuthButton(DBmanager dbm, JComponent comp, List<JComponent> comps) {
+		comp.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				if (!getEstadoComponentes(comps)) {
+					if (estadoLogin && dbm.validarCredenciales(usuarioTextField.getText(), DigestUtils.sha1Hex(passwordField.getPassword().toString() + RandomStringUtils.randomAscii(20)))) {
+//						getFrame().dispose();
+//						SwingUtilities.invokeLater(() -> new JFramePrincipal(dbm).setVisible(true));
+					} else if (!estadoLogin && dbm.existeUsuario(usuarioTextField.getText())) {
+						
+					} else {
+	
+					}
+				} else {
+					//TODO: Error
+				}
+			}
+		});
+	}
+
+	private boolean getEstadoComponentes(List<JComponent> componentes) {
+		boolean vacios = false;
+		for (JComponent componente : componentes) {
+			if (componente instanceof JTextField && ((JTextField.class.cast(componente)).getText() == ""
+					|| (JTextField.class.cast(componente)).getText() == null)) {
+				vacios = true;
+			}
+		}
+		return vacios;
+	}
 }
