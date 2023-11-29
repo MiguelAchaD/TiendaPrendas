@@ -157,10 +157,11 @@ public class DBmanager {
 		return tiendas;
 	}
 
-	public boolean existeUsuario(String nombreUsuario) {
-		String sql = "SELECT COUNT(*) FROM Usuarios WHERE nombreUsuario = ?";
+	public boolean existeUsuario(String nombreUsuario, String mail) {
+		String sql = "SELECT COUNT(*) FROM Usuario WHERE (nombreUsuario = ? and mail = ?)";
 		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setString(1, nombreUsuario);
+			pstmt.setString(2, mail);
 			try (ResultSet rs = pstmt.executeQuery()) {
 				return rs.next() && rs.getInt(1) > 0;
 			}
@@ -171,7 +172,7 @@ public class DBmanager {
 	}
 
 	public boolean validarCredenciales(String nombreUsuario, String contrasena) {
-		String sql = "SELECT COUNT(*) FROM Usuarios WHERE nombreUsuario = ? AND contrasena = ?";
+		String sql = "SELECT COUNT(*) FROM Usuario WHERE nombreUsuario = ? AND contrasena = ?";
 		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setString(1, nombreUsuario);
 			pstmt.setString(2, contrasena);
@@ -184,18 +185,18 @@ public class DBmanager {
 		}
 	}
 
-	public boolean crearUsuario(String nombreUsuario, String nombre, String apellido, String email, String contrasena) {
-		if (existeUsuario(nombreUsuario)) {
+	public boolean crearUsuario(String nombreUsuario, String nombre, String apellidos, String mail, String contrasena) {
+		if (existeUsuario(nombreUsuario, mail)) {
 			System.err.println("El usuario ya existe");
 			return false;
 		}
 
-		String sql = "INSERT INTO Usuarios (nombreUsuario, nombre, apellido, email, contrasena) VALUES (?, ?, ?, ?, ?)";
+		String sql = "INSERT INTO Usuario (nombreUsuario, nombre, apellidos, mail, contrasena) VALUES (?, ?, ?, ?, ?)";
 		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setString(1, nombreUsuario);
 			pstmt.setString(2, nombre);
-			pstmt.setString(3, apellido);
-			pstmt.setString(4, email);
+			pstmt.setString(3, apellidos);
+			pstmt.setString(4, mail);
 			pstmt.setString(5, contrasena);
 
 			pstmt.executeUpdate();
@@ -205,5 +206,29 @@ public class DBmanager {
 			return false;
 		}
 	}
+	
+	public Usuario usuarioPorNombre(String nombreUsuario) {
+	    String sql = "SELECT * FROM Usuario WHERE nombreUsuario = ?";
+	    
+	    try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+	        pstmt.setString(1, nombreUsuario);
+	        
+	        try (ResultSet rs = pstmt.executeQuery()) {
+	            if (rs.next()) {
+	                String nombre = rs.getString("nombre");
+	                String apellidos = rs.getString("apellidos");
+	                String mail = rs.getString("mail");
+	                return new Usuario(nombre, apellidos, nombreUsuario, mail);
+	            } else {
+	                System.err.println("Usuario no encontrado.");
+	                return null;
+	            }
+	        }
+	    } catch (SQLException e) {
+	        System.err.println(e.getMessage());
+	        return null;
+	    }
+	}
+
 
 }

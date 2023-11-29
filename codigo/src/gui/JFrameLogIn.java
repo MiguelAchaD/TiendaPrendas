@@ -3,6 +3,7 @@ package gui;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -25,14 +26,17 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import domain.DBmanager;
+import domain.Usuario;
 
 public class JFrameLogIn extends JFrame {
 
@@ -46,6 +50,7 @@ public class JFrameLogIn extends JFrame {
 	private JTextField nombreTextField;
 	private JTextField apellidosTextField;
 	private JPasswordField passwordField;
+	private JPasswordField passwordField2;
 	private JButton iniciarSesionButton;
 	private JButton registroButton;
 	private JLabel registroLabel;
@@ -81,6 +86,7 @@ public class JFrameLogIn extends JFrame {
 		nombreTextField = new JTextField(20);
 		apellidosTextField = new JTextField(20);
 		passwordField = new JPasswordField(20);
+		passwordField2 = new JPasswordField(20);
 		iniciarSesionButton = new JButton("Iniciar Sesión");
 		registroButton = new JButton("Registrarse");
 		registroLabel = new JLabel("<html><u>¿No tienes una cuenta? Regístrate gratis</u></html>");
@@ -102,6 +108,7 @@ public class JFrameLogIn extends JFrame {
 		registroJComponents.add(apellidosTextField);
 		registroJComponents.add(usuarioTextField);
 		registroJComponents.add(passwordField);
+		registroJComponents.add(passwordField2);
 		registroJComponents.add(registroButton);
 		registroJComponents.add(inicioSesionLabel);
 
@@ -114,6 +121,7 @@ public class JFrameLogIn extends JFrame {
 		compLabel.put(mailTextField, "Email");
 		compLabel.put(usuarioTextField, "Usuario");
 		compLabel.put(passwordField, "Contraseña");
+		compLabel.put(passwordField2, "Repita la contraseña");
 
 		setLayout(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
@@ -121,6 +129,8 @@ public class JFrameLogIn extends JFrame {
 
 		addLinkListener(inicioSesionLabel, gbc, estado, compLabel);
 		addLinkListener(registroLabel, gbc, estado, compLabel);
+		addInicioSesionClickAction(dbm, iniciarSesionButton, inicioDeSesionJComponents);
+		addRegistroClickAction(dbm, registroButton, registroJComponents);
 
 		// LOGO
 		gbc.gridx = 0;
@@ -129,17 +139,6 @@ public class JFrameLogIn extends JFrame {
 		add(logo, gbc);
 
 		initFrame(gbc, estado, getFrame(), compLabel);
-
-		// INICIAR SESION
-		iniciarSesionButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				String usuario = usuarioTextField.getText();
-				char[] password = passwordField.getPassword();
-
-				JOptionPane.showMessageDialog(JFrameLogIn.this, "Iniciar Sesión: Usuario - " + usuario);
-			}
-		});
 
 		// CONFIGURACION GENERAL
 		Dimension tamanyoPantalla = Toolkit.getDefaultToolkit().getScreenSize();
@@ -168,13 +167,17 @@ public class JFrameLogIn extends JFrame {
 		}
 
 		List<JComponent> componentes = estado.get(!estadoLogin);
-
 		for (int i = 0; i < componentes.size(); i++) {
 			JComponent comp = componentes.get(i);
 			gbc.gridy = i + 1;
 			if (compLabel.keySet().contains(comp)) {
 				gbc.gridwidth = 1;
-				frame.getContentPane().add(new JLabel(compLabel.get(comp)), gbc);
+				JPanel label = new JPanel();
+				label.setPreferredSize(new Dimension(122, 20));
+				label.setLayout(new FlowLayout(FlowLayout.RIGHT));
+				JLabel texto = new JLabel(compLabel.get(comp));
+				label.add(texto);
+				frame.getContentPane().add(label, gbc);
 				gbc.gridx = 1;
 			}
 			frame.getContentPane().add(comp, gbc);
@@ -205,20 +208,51 @@ public class JFrameLogIn extends JFrame {
 
 	}
 
-	private void addActionAuthButton(DBmanager dbm, JComponent comp, List<JComponent> comps) {
+	private void addInicioSesionClickAction(DBmanager dbm, JComponent comp, List<JComponent> comps) {
 		comp.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				if (!getEstadoComponentes(comps)) {
-					if (estadoLogin && dbm.validarCredenciales(usuarioTextField.getText(), DigestUtils.sha1Hex(passwordField.getPassword().toString() + RandomStringUtils.randomAscii(20)))) {
-//						getFrame().dispose();
-//						SwingUtilities.invokeLater(() -> new JFramePrincipal(dbm).setVisible(true));
-					} else if (!estadoLogin && dbm.existeUsuario(usuarioTextField.getText())) {
-						
+					System.out.println(DigestUtils.sha1Hex(String.valueOf(passwordField.getPassword())));
+					if (dbm.validarCredenciales(usuarioTextField.getText(),
+							DigestUtils.sha1Hex(String.valueOf(passwordField.getPassword())))) {
+						Usuario u = dbm.usuarioPorNombre(usuarioTextField.getText());
+						if (u != null) {
+							getFrame().dispose();
+							SwingUtilities.invokeLater(() -> new JFramePrincipal(dbm, u));
+						} else {
+							System.err.println("error al encontrar el usuario");
+						}
 					} else {
-	
+						System.err.println("nombre de usuario o contraseña incorrectos!");
 					}
 				} else {
-					//TODO: Error
+					System.err.println("rellene todo los campos");
+				}
+			}
+		});
+	}
+
+	private void addRegistroClickAction(DBmanager dbm, JComponent comp, List<JComponent> comps) {
+		comp.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				if (!getEstadoComponentes(comps)) {
+					if (String.valueOf(passwordField.getPassword()).equals(String.valueOf(passwordField2.getPassword()))) {
+						if (!dbm.existeUsuario(usuarioTextField.getText(), mailTextField.getText())) {
+							getFrame().dispose();
+							dbm.crearUsuario(usuarioTextField.getText(), nombreTextField.getText(),
+									apellidosTextField.getText(), mailTextField.getText(),
+									DigestUtils.sha1Hex(String.valueOf(passwordField.getPassword())));
+							
+							SwingUtilities.invokeLater(() -> new JFramePrincipal(dbm, new Usuario(nombreTextField.getText(),
+									apellidosTextField.getText(), usuarioTextField.getText(), mailTextField.getText())));
+						} else {
+							System.err.println("cuenta existente");
+						}
+					} else {
+						System.err.println("contraseñas no coinciden");
+					}
+				} else {
+					System.err.println("rellene todo los campos");
 				}
 			}
 		});
@@ -227,10 +261,13 @@ public class JFrameLogIn extends JFrame {
 	private boolean getEstadoComponentes(List<JComponent> componentes) {
 		boolean vacios = false;
 		for (JComponent componente : componentes) {
-			if (componente instanceof JTextField && ((JTextField.class.cast(componente)).getText() == ""
-					|| (JTextField.class.cast(componente)).getText() == null)) {
+			if ((componente instanceof JPasswordField
+					&& ((String.valueOf(JPasswordField.class.cast(componente).getPassword()).length() == 0)))
+					|| (componente instanceof JTextField
+							&& ((JTextField.class.cast(componente)).getText().length() == 0))) {
 				vacios = true;
 			}
+
 		}
 		return vacios;
 	}

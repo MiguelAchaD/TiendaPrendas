@@ -39,20 +39,16 @@ import domain.Prenda;
 import domain.Proveedor;
 import domain.Tamanyo;
 import domain.Tipo;
+import domain.Usuario;
 
 public class JFramePrincipal extends JFrame{
 	private static final long serialVersionUID = 1L;
 	
 	//VARIABLES
-	private JPanel panelNavegacion;
-	private JPanel panelLogo;
-	private JPanel panelLinks;
+	private JPanelNavegacion panelNavegacion;
 	private JPanel panelBusqueda = new JPanel();
 	private JPanel busqueda = new JPanel();
 	private JPanel panelPrendas;
-	private JButton botonLogo;
-	private JButton botonUsuario;
-	private JButton botonCarrito;
 	private JTextField textoFiltro = new JTextField();
 	private JComboBox<String> opcionTipo;
 	private JComboBox<String> opcionProveedor;
@@ -63,12 +59,16 @@ public class JFramePrincipal extends JFrame{
 	private JPanel funcionalidad;
 	private JButton anyadirCarrito;
 	private JButton masInfo;
+	private Usuario usuario;
 	
-	public JFramePrincipal(DBmanager dbm) {
+	public JFramePrincipal(DBmanager dbm, Usuario usuario) {
+		//CONFIGURACION DEL USUARIO
+		this.usuario = new Usuario(usuario);
 		//CONFIGURACION GENERAL
 		Dimension tamanyoPantalla = Toolkit.getDefaultToolkit().getScreenSize();
+		this.setSize(1500, 800);
 		this.setLocation((int)(tamanyoPantalla.width/2) - (int) (this.getSize().width/2), (int) (tamanyoPantalla.height/2) - (int) (this.getSize().height/2));
-		this.setMinimumSize(new Dimension(1500, 800));
+		this.setResizable(false);
 		this.setVisible(true);
 		this.setTitle("Ventana Principal");		
 		this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -76,31 +76,7 @@ public class JFramePrincipal extends JFrame{
 		//CONFIGURACION DE VENTANA
 			//JBUTTONs/JLABELs/JTABLEs/...
 				//PANEL NAVEGACION
-				panelNavegacion = new JPanel();
-				panelNavegacion.setLayout(new BorderLayout());
-				
-				botonLogo = new JButton("LOGO");
-				botonLogo.setBorder(BorderFactory.createMatteBorder(20, 50, 20, 50, Color.white));
-				botonLogo.setBackground(Color.white);
-				botonLogo.addActionListener(botonLogoAL);
-				
-				botonUsuario = new JButton("USUARIO");
-				botonUsuario.setBorder(BorderFactory.createMatteBorder(20, 50, 20, 50, Color.white));
-				botonUsuario.setBackground(Color.white);
-				botonUsuario.addActionListener(botonUsuarioAL);
-				
-				botonCarrito = new JButton("CARRITO");
-				botonCarrito.setBorder(BorderFactory.createMatteBorder(20, 50, 20, 50, Color.white));
-				botonCarrito.setBackground(Color.white);
-				botonCarrito.addActionListener(botonCarritoAL);
-				
-				panelLogo = new JPanel();
-				panelLinks = new JPanel();
-				panelLogo.add(botonLogo);
-				panelLinks.add(botonCarrito);
-				panelLinks.add(botonUsuario);
-				panelNavegacion.add(panelLogo, BorderLayout.WEST);
-				panelNavegacion.add(panelLinks, BorderLayout.EAST);
+				panelNavegacion = new JPanelNavegacion(usuario, this);
 				//PANEL BUSQUEDA
 				panelBusqueda.setLayout(new GridBagLayout());
 				textoFiltro.setPreferredSize(new Dimension(400,25));
@@ -198,8 +174,8 @@ public class JFramePrincipal extends JFrame{
 				panelNavegacion.setBackground(panelNavegacion.getBackground());
 				busqueda.setBackground(panelBusqueda.getBackground());
 				funcionalidad.setBackground(panelPrendas.getBackground());
-				panelLinks.setBackground(panelNavegacion.getBackground());
-				panelLogo.setBackground(panelNavegacion.getBackground());
+				panelNavegacion.getPanelLogo().setBackground(panelNavegacion.getBackground());
+				panelNavegacion.getPanelLinks().setBackground(panelNavegacion.getBackground());
 				
 				this.getContentPane().add(panelNavegacion, gbcPanelNavegacion);
 				this.getContentPane().add(panelBusqueda, gbcPanelBusqueda);
@@ -339,34 +315,6 @@ public class JFramePrincipal extends JFrame{
 	public void setOpcionTamanyo(JComboBox<String> opcionTamanyo) {
 		this.opcionTamanyo = opcionTamanyo;
 	}
-
-	//FUNCIONALIDAD NAVEGACION
-	final ActionListener botonLogoAL = new ActionListener() {
-		
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			System.out.println("Logo");
-			
-		}
-	};
-	
-	final ActionListener botonUsuarioAL = new ActionListener() {
-		
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			System.out.println("Usuario");
-			
-		}
-	};
-	
-	final ActionListener botonCarritoAL = new ActionListener() {
-		
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			System.out.println("Carrito");
-			
-		}
-	};
 	
 	//FUNCIONALIDAD BUSQUEDA
 	final DocumentListener textFiltroDL = new DocumentListener() {
