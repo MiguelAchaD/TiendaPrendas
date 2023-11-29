@@ -1,0 +1,18 @@
+Registro e Inicio de sesion:
+	Alinear texto ✅
+	Registro:
+		Repetir contraseña ✅
+Ventana Principal:
+	ToolTipText en algunos "fields"
+	Algoritmos tabla
+	renderers tabla
+	selección lista (añadir a carrito o más info)
+	logo svg
+	usuario dropdown
+Ventana Carrito:
+	Carrito en txt
+	Forma de pago
+Ventana Pago:
+	Implementar pagos externos
+Ventana Usuario:
+	Implementar cambios en usuario
