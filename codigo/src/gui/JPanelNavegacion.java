@@ -2,10 +2,13 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -27,20 +30,23 @@ public class JPanelNavegacion extends JPanel {
 		this.usuario = new Usuario(usuario);
 
 		this.setLayout(new BorderLayout());
+		this.setBackground(new Color(35, 39, 42));
 
 		botonLogo = new JButton("LOGO");
 		botonLogo.setBorder(BorderFactory.createMatteBorder(20, 50, 20, 50, Color.white));
 		botonLogo.setBackground(Color.white);
 		botonLogo.addActionListener(botonLogoAL);
 
-		botonUsuario = new JButton("USUARIO");
-		botonUsuario.setBorder(BorderFactory.createMatteBorder(20, 50, 20, 50, Color.white));
-		botonUsuario.setBackground(Color.white);
+		botonUsuario = new JButton(new ImageIcon(
+				new ImageIcon("images/usuario.png").getImage().getScaledInstance(40, 40, Image.SCALE_DEFAULT)));
+		botonUsuario.setBackground(this.getBackground());
+		botonUsuario.setBorder(BorderFactory.createMatteBorder(10, 20, 10, 20, this.getBackground()));
 		botonUsuario.addActionListener(botonUsuarioAL);
 
-		botonCarrito = new JButton("CARRITO");
-		botonCarrito.setBorder(BorderFactory.createMatteBorder(20, 50, 20, 50, Color.white));
-		botonCarrito.setBackground(Color.white);
+		botonCarrito = new JButton(new ImageIcon(
+				new ImageIcon("images/carrito.png").getImage().getScaledInstance(40, 40, Image.SCALE_DEFAULT)));
+		botonCarrito.setBackground(this.getBackground());
+		botonCarrito.setBorder(BorderFactory.createMatteBorder(10, 20, 10, 20, this.getBackground()));
 		botonCarrito.addActionListener(botonCarritoAL);
 
 		panelLogo = new JPanel();
@@ -48,8 +54,12 @@ public class JPanelNavegacion extends JPanel {
 		panelLogo.add(botonLogo);
 		panelLinks.add(botonCarrito);
 		panelLinks.add(botonUsuario);
+		panelLogo.setBackground(this.getBackground());
+		panelLinks.setBackground(this.getBackground());
 		this.add(panelLogo, BorderLayout.WEST);
 		this.add(panelLinks, BorderLayout.EAST);
+		this.setPreferredSize(new Dimension(emisor.getSize().width, 70));
+		this.setMaximumSize(new Dimension(emisor.getSize().width, 70));
 	}
 
 	public JPanel getPanelLogo() {
@@ -82,7 +92,9 @@ public class JPanelNavegacion extends JPanel {
 		public void actionPerformed(ActionEvent e) {
 			if (!(emisor instanceof JFrameCarrito)) {
 				emisor.dispose();
-				SwingUtilities.invokeLater(() -> {new JFrameCarrito(usuario);});
+				SwingUtilities.invokeLater(() -> {
+					new JFrameCarrito(usuario);
+				});
 			}
 		}
 	};
@@ -92,7 +104,9 @@ public class JPanelNavegacion extends JPanel {
 		public void actionPerformed(ActionEvent e) {
 			if (!(emisor instanceof JFrameUsuario)) {
 				emisor.dispose();
-				SwingUtilities.invokeLater(() -> {new JFrameUsuario(usuario);});
+				SwingUtilities.invokeLater(() -> {
+					new JFrameUsuario(usuario);
+				});
 			}
 		}
 	};

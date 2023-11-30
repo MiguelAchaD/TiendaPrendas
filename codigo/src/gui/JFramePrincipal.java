@@ -13,8 +13,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -60,18 +64,14 @@ public class JFramePrincipal extends JFrame{
 	private JButton anyadirCarrito;
 	private JButton masInfo;
 	private Usuario usuario;
+	private Properties properties;
 	
 	public JFramePrincipal(DBmanager dbm, Usuario usuario) {
 		//CONFIGURACION DEL USUARIO
 		this.usuario = new Usuario(usuario);
 		//CONFIGURACION GENERAL
-		Dimension tamanyoPantalla = Toolkit.getDefaultToolkit().getScreenSize();
-		this.setSize(1500, 800);
-		this.setLocation((int)(tamanyoPantalla.width/2) - (int) (this.getSize().width/2), (int) (tamanyoPantalla.height/2) - (int) (this.getSize().height/2));
-		this.setResizable(false);
-		this.setVisible(true);
-		this.setTitle("Ventana Principal");		
-		this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		JFrameHerramientas herramientas = new JFrameHerramientas();
+		herramientas.configurarVentanaGeneralNormal(this);
 		
 		//CONFIGURACION DE VENTANA
 			//JBUTTONs/JLABELs/JTABLEs/...
@@ -158,38 +158,41 @@ public class JFramePrincipal extends JFrame{
 				gbcPanelPrendas.fill = GridBagConstraints.BOTH;
 				
 				//JPANELs
-				panelNavegacion.setBackground(new Color(35, 39, 42));
 				panelBusqueda.setBackground(new Color(114, 137, 218));
 				panelPrendas.setBackground(new Color(35, 39, 42));
 				
-				panelNavegacion.setPreferredSize(new Dimension(1500, 70));
-				panelNavegacion.setMinimumSize(panelNavegacion.getPreferredSize());
-				
-				panelBusqueda.setPreferredSize(new Dimension(1500, 50));
+				panelBusqueda.setPreferredSize(new Dimension(this.getSize().width, 50));
 				panelBusqueda.setMinimumSize(panelBusqueda.getPreferredSize());
 				
-				panelPrendas.setPreferredSize(new Dimension(1500, 550));
+				panelPrendas.setPreferredSize(new Dimension(this.getSize().width, 550));
 				panelPrendas.setMinimumSize(panelPrendas.getPreferredSize());
 				
-				panelNavegacion.setBackground(panelNavegacion.getBackground());
 				busqueda.setBackground(panelBusqueda.getBackground());
 				funcionalidad.setBackground(panelPrendas.getBackground());
-				panelNavegacion.getPanelLogo().setBackground(panelNavegacion.getBackground());
-				panelNavegacion.getPanelLinks().setBackground(panelNavegacion.getBackground());
 				
 				this.getContentPane().add(panelNavegacion, gbcPanelNavegacion);
 				this.getContentPane().add(panelBusqueda, gbcPanelBusqueda);
 				this.getContentPane().add(panelPrendas, gbcPanelPrendas);
-				
-				pack();
-				
+								
 			initTables();
 			loadBusqueda(this, dbm);
 			loadTablePrendas(this.getTablaPrendas(), dbm);
 	}
 	
+	
+
+    public Properties lectorPropiedades(String archivo) {
+        properties = new Properties();
+        try (InputStream input = new FileInputStream(archivo)) {
+            properties.load(input);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return properties;
+    }
 
 	public void initTables() {
+		Properties propiedades = lectorPropiedades("config.properties");
 		TableCellRenderer tcr = (table, value, isSelected, hasFocus, row, column) -> {
 			JPanel result = new JPanel(new GridBagLayout());
 			result.setBackground(Color.white);

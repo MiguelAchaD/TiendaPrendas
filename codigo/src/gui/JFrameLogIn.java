@@ -8,9 +8,13 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.KeyEventDispatcher;
+import java.awt.KeyboardFocusManager;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -115,6 +119,20 @@ public class JFrameLogIn extends JFrame {
 		estado.put(true, inicioDeSesionJComponents);
 		estado.put(false, registroJComponents);
 
+		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
+			@Override
+			public boolean dispatchKeyEvent(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER && e.getID() == KeyEvent.KEY_PRESSED) {
+					if (estadoLogin == true) {
+						iniciarSesion(dbm, inicioDeSesionJComponents);
+					} else {
+						registrar(dbm, registroJComponents);
+					}
+				}
+				return false;
+			}
+		});
+
 		HashMap<JComponent, String> compLabel = new HashMap<>();
 		compLabel.put(nombreTextField, "Nombre");
 		compLabel.put(apellidosTextField, "Apellidos");
@@ -142,7 +160,7 @@ public class JFrameLogIn extends JFrame {
 
 		// CONFIGURACION GENERAL
 		Dimension tamanyoPantalla = Toolkit.getDefaultToolkit().getScreenSize();
-		int tamanyo = (tamanyoPantalla.height / 2);
+		int tamanyo = ((int) (tamanyoPantalla.height * 0.7));
 		this.setSize(tamanyo, tamanyo);
 		this.setLocation((int) (tamanyoPantalla.width / 2) - (int) (this.getSize().width / 2),
 				(int) (tamanyoPantalla.height / 2) - (int) (this.getSize().height / 2));
@@ -211,23 +229,7 @@ public class JFrameLogIn extends JFrame {
 	private void addInicioSesionClickAction(DBmanager dbm, JComponent comp, List<JComponent> comps) {
 		comp.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
-				if (!getEstadoComponentes(comps)) {
-					System.out.println(DigestUtils.sha1Hex(String.valueOf(passwordField.getPassword())));
-					if (dbm.validarCredenciales(usuarioTextField.getText(),
-							DigestUtils.sha1Hex(String.valueOf(passwordField.getPassword())))) {
-						Usuario u = dbm.usuarioPorNombre(usuarioTextField.getText());
-						if (u != null) {
-							getFrame().dispose();
-							SwingUtilities.invokeLater(() -> new JFramePrincipal(dbm, u));
-						} else {
-							System.err.println("error al encontrar el usuario");
-						}
-					} else {
-						System.err.println("nombre de usuario o contraseña incorrectos!");
-					}
-				} else {
-					System.err.println("rellene todo los campos");
-				}
+				iniciarSesion(dbm, comps);
 			}
 		});
 	}
@@ -235,25 +237,7 @@ public class JFrameLogIn extends JFrame {
 	private void addRegistroClickAction(DBmanager dbm, JComponent comp, List<JComponent> comps) {
 		comp.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
-				if (!getEstadoComponentes(comps)) {
-					if (String.valueOf(passwordField.getPassword()).equals(String.valueOf(passwordField2.getPassword()))) {
-						if (!dbm.existeUsuario(usuarioTextField.getText(), mailTextField.getText())) {
-							getFrame().dispose();
-							dbm.crearUsuario(usuarioTextField.getText(), nombreTextField.getText(),
-									apellidosTextField.getText(), mailTextField.getText(),
-									DigestUtils.sha1Hex(String.valueOf(passwordField.getPassword())));
-							
-							SwingUtilities.invokeLater(() -> new JFramePrincipal(dbm, new Usuario(nombreTextField.getText(),
-									apellidosTextField.getText(), usuarioTextField.getText(), mailTextField.getText())));
-						} else {
-							System.err.println("cuenta existente");
-						}
-					} else {
-						System.err.println("contraseñas no coinciden");
-					}
-				} else {
-					System.err.println("rellene todo los campos");
-				}
+				registrar(dbm, comps);
 			}
 		});
 	}
@@ -270,5 +254,46 @@ public class JFrameLogIn extends JFrame {
 
 		}
 		return vacios;
+	}
+
+	private void iniciarSesion(DBmanager dbm, List<JComponent> comps) {
+		if (!getEstadoComponentes(comps)) {
+			if (dbm.validarCredenciales(usuarioTextField.getText(),
+					DigestUtils.sha1Hex(String.valueOf(passwordField.getPassword())))) {
+				Usuario u = dbm.usuarioPorNombre(usuarioTextField.getText());
+				if (u != null) {
+					getFrame().dispose();
+					SwingUtilities.invokeLater(() -> new JFramePrincipal(dbm, u));
+				} else {
+					System.err.println("error al encontrar el usuario");
+				}
+			} else {
+				System.err.println("nombre de usuario o contraseña incorrectos!");
+			}
+		} else {
+			System.err.println("rellene todo los campos");
+		}
+	}
+
+	private void registrar(DBmanager dbm, List<JComponent> comps) {
+		if (!getEstadoComponentes(comps)) {
+			if (String.valueOf(passwordField.getPassword()).equals(String.valueOf(passwordField2.getPassword()))) {
+				if (!dbm.existeUsuario(usuarioTextField.getText(), mailTextField.getText())) {
+					getFrame().dispose();
+					dbm.crearUsuario(usuarioTextField.getText(), nombreTextField.getText(),
+							apellidosTextField.getText(), mailTextField.getText(),
+							DigestUtils.sha1Hex(String.valueOf(passwordField.getPassword())));
+
+					SwingUtilities.invokeLater(() -> new JFramePrincipal(dbm, new Usuario(nombreTextField.getText(),
+							apellidosTextField.getText(), usuarioTextField.getText(), mailTextField.getText())));
+				} else {
+					System.err.println("cuenta existente");
+				}
+			} else {
+				System.err.println("contraseñas no coinciden");
+			}
+		} else {
+			System.err.println("rellene todo los campos");
+		}
 	}
 }
