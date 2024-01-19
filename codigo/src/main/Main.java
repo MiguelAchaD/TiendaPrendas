@@ -1,33 +1,36 @@
 package main;
 
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
+import java.util.logging.Logger;
 
-import javax.swing.JTable;
 import javax.swing.SwingUtilities;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumnModel;
 
 import domain.DBmanager;
-import domain.Prenda;
-import domain.Proveedor;
-import domain.Tamanyo;
-import domain.Tipo;
 import gui.JFrameCarga;
-import gui.JFrameLogIn;
-import gui.JFramePrincipal;
+import io.HerramientasFicheros;
 
 public class Main {
-	public static void main(String[] args) throws ClassNotFoundException, SQLException {
+	private static Logger logger;
+	private static HerramientasFicheros hf;
+	
+	public static void main(String[] args) throws ClassNotFoundException, SQLException, IOException {
+		// CONFIGURACION LOGGER
+		hf = new HerramientasFicheros();
+		logger = HerramientasFicheros.getLogger();
+		hf.configurarLogger();
+		
 		// APERTURA DE LA BD
 		DBmanager dbm = new DBmanager();
 		dbm.initConexion();
-
+		
 		// LLAMADA A APERTURA DE VENTANAS
 		SwingUtilities.invokeLater(() -> {
-		    new JFrameCarga(dbm);
+		    try {
+				new JFrameCarga(dbm);
+			} catch (IOException e) {
+				logger.warning("Error al invocar el programa: " + e.getMessage());
+			}
 		});
 	}
 }

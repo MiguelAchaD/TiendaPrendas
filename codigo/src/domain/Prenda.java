@@ -7,10 +7,11 @@ public class Prenda {
 	private Proveedor proveedor;
 	private String nombre;
 	private String imagen;
-	private Integer precio;
+	private int precio;
+	private int cantidad;
 	
 	//CONSTRUCTORES
-	public Prenda(Tamanyo tamanyo, Tipo tipo, Proveedor proveedor, String nombre, String imagen, Integer precio) {
+	public Prenda(Tamanyo tamanyo, Tipo tipo, Proveedor proveedor, String nombre, String imagen, int precio) {
 		super();
 		this.tamanyo = tamanyo;
 		this.tipo = tipo;
@@ -18,6 +19,29 @@ public class Prenda {
 		this.nombre = nombre;
 		this.imagen = imagen;
 		this.precio = precio;
+		this.cantidad = 1;
+	}
+	
+	public Prenda(Tamanyo tamanyo, Tipo tipo, Proveedor proveedor, String nombre, String imagen, int precio, int cantidad) {
+		super();
+		this.tamanyo = tamanyo;
+		this.tipo = tipo;
+		this.proveedor = proveedor;
+		this.nombre = nombre;
+		this.imagen = imagen;
+		this.precio = precio;
+		this.cantidad = cantidad;
+	}
+	
+	public Prenda() {
+		super();
+		this.tamanyo = new Tamanyo("");
+		this.tipo = new Tipo("");
+		this.proveedor = new Proveedor("");
+		this.nombre = "";
+		this.imagen = "";
+		this.precio = 0;
+		this.cantidad = 0;
 	}
 	
 	//GETTERS Y SETTERS
@@ -61,12 +85,20 @@ public class Prenda {
 		this.imagen = imagen;
 	}
 
-	public Integer getPrecio() {
+	public int getPrecio() {
 		return precio;
 	}
 
-	public void setPrecio(Integer precio) {
+	public void setPrecio(int precio) {
 		this.precio = precio;
+	}
+
+	public int getCantidad() {
+		return cantidad;
+	}
+
+	public void setCantidad(int cantidad) {
+		this.cantidad = cantidad;
 	}
 
 	//TO STRING

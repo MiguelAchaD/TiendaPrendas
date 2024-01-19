@@ -1,5 +1,6 @@
 package domain;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -8,14 +9,27 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
+import java.util.logging.Logger;
+
+import io.HerramientasFicheros;
 
 public class DBmanager {
 	// CREACION DE LA CONEXION
 	private Connection conn;
+	private HerramientasFicheros hf;
+	private Properties propiedades;
+	private Logger logger;
+	
+	public DBmanager() throws IOException {
+		hf = new HerramientasFicheros();
+		propiedades = hf.lectorPropiedades("conf/config.properties");
+		logger = HerramientasFicheros.getLogger();
+	}
 
 	public void initConexion() throws ClassNotFoundException, SQLException {
 		Class.forName("org.sqlite.JDBC");
-		conn = DriverManager.getConnection("jdbc:sqlite:bd.db");
+		conn = DriverManager.getConnection("jdbc:sqlite:" + propiedades.getProperty("rutaBaseDeDatos") + "bd.db");
 	}
 
 	public void cerrarConexion() throws SQLException {
@@ -23,6 +37,22 @@ public class DBmanager {
 	}
 
 	// METODOS DE LA BASE DE DATOS
+	public int getMaximoCoste() {
+		int coste = 500;
+		String sql = "Select max(precio) from Prenda;";
+		try(Statement stmt = conn.createStatement()){
+			try(ResultSet rs = stmt.executeQuery(sql)){
+				int precioSupuesto = rs.getInt(1);
+				if (Integer.valueOf(precioSupuesto) > 0) {
+					coste = Integer.valueOf(precioSupuesto);
+				}
+			}
+		} catch (SQLException e) {
+			logger.warning("Error al buscar el maximo coste - " + e.getMessage());
+		}
+		return coste;
+	}
+	
 	public List<Proveedor> getProveedores() {
 		String sql = "Select * from Proveedor;";
 		List<Proveedor> proveedores = new ArrayList<>();
@@ -32,12 +62,9 @@ public class DBmanager {
 					Proveedor proveedor = new Proveedor(rs.getString("nombre"));
 					proveedores.add(proveedor);
 				}
-			} catch (Exception e) {
-				System.err.println(e.getMessage());
 			}
-
 		} catch (Exception e) {
-			System.err.println(e.getMessage());
+			logger.warning("Error al buscar lo proveedores - " + e.getMessage());
 		}
 		return proveedores;
 	}
@@ -62,12 +89,9 @@ public class DBmanager {
 					Tipo tipo = new Tipo(rs.getString("nombre"));
 					tipos.add(tipo);
 				}
-			} catch (Exception e) {
-				System.err.println(e.getMessage());
 			}
-
 		} catch (Exception e) {
-			System.err.println(e.getMessage());
+			logger.warning("Error al buscar los tipos - " + e.getMessage());
 		}
 		return tipos;
 	}
@@ -92,12 +116,9 @@ public class DBmanager {
 					Tamanyo tamanyo = new Tamanyo(rs.getString("nombre"));
 					tamanyos.add(tamanyo);
 				}
-			} catch (Exception e) {
-				System.err.println(e.getMessage());
 			}
-
 		} catch (Exception e) {
-			System.err.println(e.getMessage());
+			logger.warning("Error al buscar los tamanyos - " + e.getMessage());
 		}
 		return tamanyos;
 	}
@@ -128,12 +149,9 @@ public class DBmanager {
 							rs.getString("imagen"), rs.getInt("precio"));
 					prendas.add(prenda);
 				}
-			} catch (Exception e) {
-				System.err.println(e.getMessage());
 			}
-
 		} catch (Exception e) {
-			System.err.println(e.getMessage());
+			logger.warning("Error al buscar las prendas - " + e.getMessage());
 		}
 		return prendas;
 	}
@@ -147,12 +165,9 @@ public class DBmanager {
 				Tienda tienda = new Tienda(matchProveedor(proveedores, rs.getString("proveedor")), rs.getString("URI"),
 						rs.getString("telefono"), rs.getString("direccion"));
 				tiendas.add(tienda);
-			} catch (Exception e) {
-				System.err.println(e.getMessage());
 			}
-
 		} catch (Exception e) {
-			System.err.println(e.getMessage());
+			logger.warning("Error al buscar las tiendas - " + e.getMessage());
 		}
 		return tiendas;
 	}
@@ -166,7 +181,7 @@ public class DBmanager {
 				return rs.next() && rs.getInt(1) > 0;
 			}
 		} catch (SQLException e) {
-			System.err.println(e.getMessage());
+			logger.warning("Error al verificar usuario - " + e.getMessage());
 			return false;
 		}
 	}
@@ -180,14 +195,14 @@ public class DBmanager {
 				return rs.next() && rs.getInt(1) > 0;
 			}
 		} catch (SQLException e) {
-			System.err.println(e.getMessage());
+			logger.warning("Error al validar las credenciales - " + e.getMessage());
 			return false;
 		}
 	}
 
 	public boolean crearUsuario(String nombreUsuario, String nombre, String apellidos, String mail, String contrasena) {
 		if (existeUsuario(nombreUsuario, mail)) {
-			System.err.println("El usuario ya existe");
+			logger.warning("Usuario ya existente.");
 			return false;
 		}
 
@@ -202,7 +217,7 @@ public class DBmanager {
 			pstmt.executeUpdate();
 			return true;
 		} catch (SQLException e) {
-			System.err.println(e.getMessage());
+			logger.warning("Error al crear el nuevo usuario - " + e.getMessage());
 			return false;
 		}
 	}
@@ -220,15 +235,14 @@ public class DBmanager {
 	                String mail = rs.getString("mail");
 	                return new Usuario(nombre, apellidos, nombreUsuario, mail);
 	            } else {
-	                System.err.println("Usuario no encontrado.");
+	            	logger.warning("Usuario no encontrado - No existe el usuario");
 	                return null;
 	            }
 	        }
 	    } catch (SQLException e) {
-	        System.err.println(e.getMessage());
+	    	logger.warning("Usuario no encontrado - " + e.getMessage());
 	        return null;
 	    }
 	}
-
 
 }

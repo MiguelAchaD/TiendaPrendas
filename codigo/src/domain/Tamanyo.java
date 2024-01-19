@@ -18,7 +18,7 @@ public class Tamanyo {
 
 	@Override
 	public String toString() {
-		return "Tamanyo [nombre=" + nombre + "]";
+		return nombre;
 	}
 	
 }

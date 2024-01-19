@@ -19,11 +19,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -41,6 +43,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 
 import domain.DBmanager;
 import domain.Usuario;
+import io.HerramientasFicheros;
 
 public class JFrameLogIn extends JFrame {
 
@@ -59,12 +62,18 @@ public class JFrameLogIn extends JFrame {
 	private JButton registroButton;
 	private JLabel registroLabel;
 	private JLabel inicioSesionLabel;
+	private KeyEventDispatcher ked;
+	private Logger logger;
+	private HerramientasFicheros hf;
 
 	private JFrameLogIn getFrame() {
 		return this;
 	}
 
-	public JFrameLogIn(DBmanager dbm) {
+	public JFrameLogIn(DBmanager dbm) throws IOException {
+		//CONFIGURACION DE LOGGER
+		logger = HerramientasFicheros.getLogger();
+		hf = new HerramientasFicheros();
 
 		// CONFIGURACION DE VENTANA
 		this.addWindowListener(new WindowAdapter() {
@@ -73,7 +82,7 @@ public class JFrameLogIn extends JFrame {
 				if (e.getWindow() instanceof JFrameLogIn) {
 					try {
 						dbm.cerrarConexion();
-						System.out.println("Conexión a bd cerrada");
+						logger.info("base de datos cerrada.");
 						System.exit(1);
 					} catch (SQLException e1) {
 						System.out.println(e1.getMessage());
@@ -118,8 +127,8 @@ public class JFrameLogIn extends JFrame {
 
 		estado.put(true, inicioDeSesionJComponents);
 		estado.put(false, registroJComponents);
-
-		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
+		
+		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(ked = new KeyEventDispatcher() {
 			@Override
 			public boolean dispatchKeyEvent(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER && e.getID() == KeyEvent.KEY_PRESSED) {
@@ -251,7 +260,6 @@ public class JFrameLogIn extends JFrame {
 							&& ((JTextField.class.cast(componente)).getText().length() == 0))) {
 				vacios = true;
 			}
-
 		}
 		return vacios;
 	}
@@ -263,15 +271,22 @@ public class JFrameLogIn extends JFrame {
 				Usuario u = dbm.usuarioPorNombre(usuarioTextField.getText());
 				if (u != null) {
 					getFrame().dispose();
-					SwingUtilities.invokeLater(() -> new JFramePrincipal(dbm, u));
+					KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(ked);
+					SwingUtilities.invokeLater(() -> {
+						try {
+							new JFramePrincipal(dbm, u);
+						} catch (IOException e) {
+							logger.warning("Error al invocar la ventana pricipal: " + e.getMessage());
+						}
+					});
 				} else {
-					System.err.println("error al encontrar el usuario");
+					logger.warning("error al encontrar el usuario");
 				}
 			} else {
-				System.err.println("nombre de usuario o contraseña incorrectos!");
+				logger.warning("nombre de usuario o contraseña incorrectos!");
 			}
 		} else {
-			System.err.println("rellene todo los campos");
+			logger.warning("rellene todo los campos");
 		}
 	}
 
@@ -280,20 +295,27 @@ public class JFrameLogIn extends JFrame {
 			if (String.valueOf(passwordField.getPassword()).equals(String.valueOf(passwordField2.getPassword()))) {
 				if (!dbm.existeUsuario(usuarioTextField.getText(), mailTextField.getText())) {
 					getFrame().dispose();
+					KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(ked);
 					dbm.crearUsuario(usuarioTextField.getText(), nombreTextField.getText(),
 							apellidosTextField.getText(), mailTextField.getText(),
 							DigestUtils.sha1Hex(String.valueOf(passwordField.getPassword())));
 
-					SwingUtilities.invokeLater(() -> new JFramePrincipal(dbm, new Usuario(nombreTextField.getText(),
-							apellidosTextField.getText(), usuarioTextField.getText(), mailTextField.getText())));
+					SwingUtilities.invokeLater(() -> {
+						try {
+							new JFramePrincipal(dbm, new Usuario(nombreTextField.getText(),
+									apellidosTextField.getText(), usuarioTextField.getText(), mailTextField.getText()));
+						} catch (IOException e) {
+							logger.warning("Error al invocar la ventana pricipal: " + e.getMessage());
+						}
+					});
 				} else {
-					System.err.println("cuenta existente");
+					logger.warning("cuenta existente");
 				}
 			} else {
-				System.err.println("contraseñas no coinciden");
+				logger.warning("contraseñas no coinciden");
 			}
 		} else {
-			System.err.println("rellene todo los campos");
+			logger.warning("rellene todo los campos");
 		}
 	}
 }

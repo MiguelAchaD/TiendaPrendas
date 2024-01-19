@@ -18,7 +18,7 @@ public class Proveedor {
 
 	@Override
 	public String toString() {
-		return "Proveedor [nombre=" + nombre + "]";
+		return nombre;
 	}
 	
 	

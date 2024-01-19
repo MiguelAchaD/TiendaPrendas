@@ -3,22 +3,33 @@ package gui;
 import javax.swing.*;
 
 import domain.DBmanager;
+import io.HerramientasFicheros;
 
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Properties;
+import java.util.logging.Logger;
 
 public class JFrameCarga extends JFrame {
 	private static final long serialVersionUID = 1L;
 
 	// VARIABLES
-	JLabel imagen;
+	private JLabel imagen;
+	private Properties propiedades;
+	private HerramientasFicheros hf = new HerramientasFicheros();
+	private Logger logger;
 
-	public JFrameCarga(DBmanager dbm) {
+	public JFrameCarga(DBmanager dbm) throws IOException {
+		//CONFIGURACION DE LOGGER
+		logger = HerramientasFicheros.getLogger();
+		
 		// CONFIGURACION DE VENTANA
 		imagen = new JLabel();
-		ImageIcon imagenOriginal = new ImageIcon("images/icono.png");
+		propiedades = hf.lectorPropiedades("conf/config.properties");
+		ImageIcon imagenOriginal = new ImageIcon(propiedades.getProperty("rutaImagenes") + "icono.png");
 		Image imagenEscalada = imagenOriginal.getImage().getScaledInstance(250, 250, Image.SCALE_DEFAULT);
 		imagen.setIcon(new ImageIcon(imagenEscalada));
 
@@ -34,21 +45,22 @@ public class JFrameCarga extends JFrame {
 		this.setSize(tamanyo, tamanyo);
 		this.setLocation((int) (tamanyoPantalla.width / 2) - (int) (this.getSize().width / 2),
 				(int) (tamanyoPantalla.height / 2) - (int) (this.getSize().height / 2));
-
-		// Agregar WindowListener para cerrar la ventana
 		this.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowOpened(WindowEvent e) {
-				//Carga de datos
 				try {
-					// TODO: Cargar datos
 					Thread.sleep(1000);
 					dispose();
 				} catch (InterruptedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+					logger.warning(e1.getMessage());
 				}
-				SwingUtilities.invokeLater(() -> new JFrameLogIn(dbm).setVisible(true));
+				SwingUtilities.invokeLater(() -> {
+					try {
+						new JFrameLogIn(dbm).setVisible(true);
+					} catch (IOException e1) {
+						logger.warning("Error al invocar la ventana de logIn: " + e1.getMessage());
+					}
+				});
 			}
 			
 			@Override
@@ -56,10 +68,10 @@ public class JFrameCarga extends JFrame {
 				if (e.getWindow() instanceof JFrameCarga) {
 					try {
 						dbm.cerrarConexion();
-						System.out.println("Conexión a bd cerrada");
+						logger.info("Conexión a bd cerrada");
 						System.exit(1);
 					} catch (SQLException e1) {
-						System.out.println(e1.getMessage());
+						logger.warning(e1.getMessage());
 					}
 				}
 			}
